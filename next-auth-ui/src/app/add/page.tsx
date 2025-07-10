@@ -6,10 +6,22 @@ import { useRouter } from "next/navigation";
 export default function AddStudent() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [error, setError] = useState("");
   const router = useRouter();
 
   const addStudent = async () => {
     if (!name || !email) return;
+
+    const res = await fetch("http://localhost:8081/students");
+    const existing = await res.json();
+    const emailExists = existing.some((student: any) => student.email === email);
+
+    if (emailExists) {
+      setError("A student with this email already exists.");
+      return;
+    }
+
+    
     await fetch("http://localhost:8081/students", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -17,6 +29,7 @@ export default function AddStudent() {
     });
     setName("");
     setEmail("");
+    setError("");
     router.push("/dashboard");
   };
 
@@ -39,6 +52,7 @@ export default function AddStudent() {
             onChange={(e) => setEmail(e.target.value)}
             className="form-input"
           />
+          {error && <p style={{ color: "red", fontSize: "0.9rem" }}>{error}</p>}
           <button onClick={addStudent} className="form-button">
             Submit
           </button>
